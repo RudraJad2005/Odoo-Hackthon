@@ -2,57 +2,76 @@
 
 import Link from 'next/link';
 
-// Mock data based on the backend TripOut schema
-const MOCK_TRIP = {
-  id: 1,
-  name: 'The Rome Chronicles',
-  description: 'A week exploring the ancient ruins, eating amazing pasta, and visiting the Vatican.',
-  cover_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=2670&auto=format&fit=crop',
-  start_date: '2026-10-12',
-  end_date: '2026-10-19',
-  status: 'draft',
-  is_public: false,
-  budget_limit: 2500.0,
-  stops: [
-    {
-      id: 101,
-      city_name: 'Rome',
-      country: 'Italy',
-      arrival_date: '2026-10-12',
-      departure_date: '2026-10-19',
-      order: 1,
-      activities: [
-        { id: 1001, name: 'Colosseum Tour', day_number: 1, time_slot: '10:00 AM', duration_minutes: 120, estimated_cost: 35.0, cost_category: 'activity' },
-        { id: 1002, name: 'Vatican Museums', day_number: 2, time_slot: '09:00 AM', duration_minutes: 180, estimated_cost: 45.0, cost_category: 'activity' },
-        { id: 1003, name: 'Pasta Making Class', day_number: 3, time_slot: '05:00 PM', duration_minutes: 150, estimated_cost: 80.0, cost_category: 'food' },
-      ]
-    }
-  ]
-};
+import { useEffect, useState } from 'react';
+import { fetchApi } from '@/lib/api';
 
-function formatDateRange(start: string, end: string) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+function formatDateRange(start?: string | null, end?: string | null) {
+  if (!start && !end) return 'DATES TBD';
+  if (start && !end) return new Date(start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  if (!start && end) return `Until ${new Date(end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+  
+  const startDate = new Date(start!);
+  const endDate = new Date(end!);
   return `${startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} — ${endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
 }
 
+
+
 export default function TripDetailPage({ params }: { params: { id: string } }) {
-  // Use mock data for now
-  const trip = MOCK_TRIP;
-  const totalCost = trip.stops.reduce((acc, stop) => 
-    acc + stop.activities.reduce((sum, act) => sum + act.estimated_cost, 0), 0
-  );
+  const [trip, setTrip] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function loadTrip() {
+      try {
+        const data = await fetchApi(`/trips/${params.id}`);
+        setTrip(data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load trip');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTrip();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error || !trip) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">{error || 'Trip not found'}</p>
+      </div>
+    );
+  }
+
+  const totalCost = trip.stops?.reduce((acc: number, stop: any) => 
+    acc + (stop.activities?.reduce((sum: number, act: any) => sum + act.estimated_cost, 0) || 0), 0
+  ) || 0;
 
   return (
     <div className="min-h-[calc(100vh-65px)] pb-20">
       
       {/* Hero Section */}
       <div className="relative w-full h-[50vh] md:h-[65vh] flex flex-col justify-end p-6 md:p-16 mb-16 overflow-hidden">
-        <img 
-          src={trip.cover_url} 
-          alt={trip.name} 
-          className="absolute inset-0 w-full h-full object-cover grayscale-[30%]"
-        />
+        {trip.cover_url && (
+          <img 
+            src={trip.cover_url} 
+            alt={trip.name} 
+            className="absolute inset-0 w-full h-full object-cover grayscale-[30%]"
+          />
+        )}
+        {/* Fallback pattern if no image */}
+        {!trip.cover_url && (
+           <div className="absolute inset-0 w-full h-full bg-black/10 dark:bg-white/10" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -86,48 +105,56 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
             <h2 className="serif text-3xl mb-4">The Vision.</h2>
             <div className="w-8 h-px bg-accent mb-6"></div>
             <p className="sans text-sm leading-relaxed text-black/80 dark:text-white/80">
-              {trip.description}
+              {trip.description || "No description provided for this journey."}
             </p>
           </div>
 
           <div className="space-y-16">
-            {trip.stops.map((stop) => (
-              <div key={stop.id}>
-                <div className="flex items-end gap-4 mb-8">
-                  <h3 className="serif text-4xl">{stop.city_name}</h3>
-                  <span className="sans text-[10px] uppercase tracking-[0.2em] text-gray-500 pb-1.5">{stop.country}</span>
-                </div>
-                
-                <div className="space-y-8 pl-4 md:pl-8 border-l border-black/10 dark:border-white/10">
-                  {stop.activities.map((activity) => (
-                    <div key={activity.id} className="relative">
-                      {/* Timeline Dot */}
-                      <div className="absolute -left-[21px] md:-left-[37px] top-1.5 w-2 h-2 rounded-full bg-accent"></div>
-                      
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
-                        <div>
-                          <p className="sans text-[10px] uppercase tracking-widest text-accent mb-1">
-                            Day {activity.day_number} &mdash; {activity.time_slot}
-                          </p>
-                          <h4 className="serif text-2xl mb-1">{activity.name}</h4>
-                          <span className="sans text-[10px] uppercase tracking-wider text-gray-500 bg-black/5 dark:bg-white/5 px-2 py-1 rounded-sm">
-                            {activity.cost_category}
-                          </span>
+            {trip.stops?.length === 0 ? (
+              <p className="sans text-sm text-gray-500 italic">No stops have been added to this trip yet.</p>
+            ) : (
+              trip.stops?.map((stop: any) => (
+                <div key={stop.id}>
+                  <div className="flex items-end gap-4 mb-8">
+                    <h3 className="serif text-4xl">{stop.city_name}</h3>
+                    <span className="sans text-[10px] uppercase tracking-[0.2em] text-gray-500 pb-1.5">{stop.country}</span>
+                  </div>
+                  
+                  <div className="space-y-8 pl-4 md:pl-8 border-l border-black/10 dark:border-white/10">
+                    {stop.activities?.length === 0 ? (
+                      <p className="sans text-xs text-gray-400">No activities planned here.</p>
+                    ) : (
+                      stop.activities?.map((activity: any) => (
+                        <div key={activity.id} className="relative">
+                          {/* Timeline Dot */}
+                          <div className="absolute -left-[21px] md:-left-[37px] top-1.5 w-2 h-2 rounded-full bg-accent"></div>
+                          
+                          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
+                            <div>
+                              <p className="sans text-[10px] uppercase tracking-widest text-accent mb-1">
+                                Day {activity.day_number} &mdash; {activity.time_slot}
+                              </p>
+                              <h4 className="serif text-2xl mb-1">{activity.name}</h4>
+                              <span className="sans text-[10px] uppercase tracking-wider text-gray-500 bg-black/5 dark:bg-white/5 px-2 py-1 rounded-sm">
+                                {activity.cost_category}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <p className="sans text-sm tracking-wider">
+                                ${activity.estimated_cost?.toFixed(2) || '0.00'}
+                              </p>
+                              <p className="sans text-[10px] uppercase tracking-widest text-gray-500 mt-1">
+                                {activity.duration_minutes} MIN
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="sans text-sm tracking-wider">
-                            ${activity.estimated_cost.toFixed(2)}
-                          </p>
-                          <p className="sans text-[10px] uppercase tracking-widest text-gray-500 mt-1">
-                            {activity.duration_minutes} MIN
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

@@ -3,7 +3,8 @@
 import secrets
 from collections import defaultdict
 
-from sqlalchemy import select, func
+from fastapi import HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -17,25 +18,23 @@ from app.apps.trips.schemas import (
     TripActivityCreate,
     TripActivityUpdate,
     TripCreate,
-    TripListOut,
     TripUpdate,
 )
-from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 
 
 # ── Trip CRUD ────────────────────────────────────────────────────────────
 
-
 async def create_trip(db: AsyncSession, owner_id: int, data: TripCreate) -> Trip:
     trip = Trip(owner_id=owner_id, **data.model_dump())
-    trip.public_slug = secrets.token_urlsafe(12)
+    # public_slug generation on is_public=True: use secrets.token_urlsafe(8)
+    if getattr(data, "is_public", False) or getattr(trip, "is_public", False):
+        trip.public_slug = secrets.token_urlsafe(8)
     db.add(trip)
     await db.flush()
     await db.refresh(trip, ["stops"])
     return trip
 
-
-async def get_trip(db: AsyncSession, trip_id: int) -> Trip:
+async def get_trip(db: AsyncSession, trip_id: int, owner_id: int) -> Trip:
     result = await db.execute(
         select(Trip)
         .options(selectinload(Trip.stops).selectinload(Stop.activities))
@@ -43,102 +42,82 @@ async def get_trip(db: AsyncSession, trip_id: int) -> Trip:
     )
     trip = result.scalar_one_or_none()
     if trip is None:
-        raise NotFoundError("Trip", trip_id)
+        raise HTTPException(status_code=404, detail="Trip not found")
+    if trip.owner_id != owner_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this trip")
     return trip
 
-
-async def get_trip_by_slug(db: AsyncSession, slug: str) -> Trip:
-    result = await db.execute(
-        select(Trip)
-        .options(selectinload(Trip.stops).selectinload(Stop.activities))
-        .where(Trip.public_slug == slug, Trip.is_public == True)  # noqa: E712
-    )
-    trip = result.scalar_one_or_none()
-    if trip is None:
-        raise NotFoundError("Trip")
-    return trip
-
-
-async def list_user_trips(
-    db: AsyncSession,
-    owner_id: int,
-    status_filter: str | None = None,
-    skip: int = 0,
-    limit: int = 50,
-) -> list[TripListOut]:
+async def list_trips(db: AsyncSession, owner_id: int, status: str | None = None) -> list[Trip]:
     query = (
         select(Trip)
         .options(selectinload(Trip.stops).selectinload(Stop.activities))
         .where(Trip.owner_id == owner_id)
     )
-    if status_filter:
-        query = query.where(Trip.status == status_filter)
-    query = query.order_by(Trip.created_at.desc()).offset(skip).limit(limit)
-
+    if status:
+        query = query.where(Trip.status == status)
+    
+    query = query.order_by(Trip.created_at.desc())
+    
     result = await db.execute(query)
-    trips = result.scalars().all()
-
-    out: list[TripListOut] = []
+    trips = list(result.scalars().all())
+    
     for t in trips:
-        total_cost = sum(a.estimated_cost for s in t.stops for a in s.activities)
-        out.append(
-            TripListOut(
-                id=t.id,
-                name=t.name,
-                cover_url=t.cover_url,
-                start_date=t.start_date,
-                end_date=t.end_date,
-                status=t.status,
-                is_public=t.is_public,
-                stop_count=len(t.stops),
-                total_cost=round(total_cost, 2),
-                created_at=t.created_at,
-            )
-        )
-    return out
+        t.stop_count = len(t.stops)
+        t.total_cost = sum(a.estimated_cost for s in t.stops for a in s.activities)
+        
+    return trips
 
-
-async def update_trip(db: AsyncSession, trip: Trip, data: TripUpdate) -> Trip:
+async def update_trip(db: AsyncSession, trip_id: int, owner_id: int, data: TripUpdate) -> Trip:
+    trip = await get_trip(db, trip_id, owner_id)
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(trip, field, value)
+        
+    if "is_public" in update_data:
+        if trip.is_public and not trip.public_slug:
+            trip.public_slug = secrets.token_urlsafe(8)
+        elif not trip.is_public:
+            trip.public_slug = None
+            
     await db.flush()
     await db.refresh(trip, ["stops"])
     return trip
 
-
-async def delete_trip(db: AsyncSession, trip: Trip) -> None:
+async def delete_trip(db: AsyncSession, trip_id: int, owner_id: int) -> None:
+    trip = await get_trip(db, trip_id, owner_id)
     await db.delete(trip)
     await db.flush()
 
 
-def assert_trip_owner(trip: Trip, user_id: int) -> None:
-    if trip.owner_id != user_id:
-        raise ForbiddenError("You do not own this trip")
-
-
 # ── Stop CRUD ────────────────────────────────────────────────────────────
 
-
-async def add_stop(db: AsyncSession, trip_id: int, data: StopCreate) -> Stop:
+async def add_stop(db: AsyncSession, trip_id: int, owner_id: int, data: StopCreate) -> Stop:
+    await get_trip(db, trip_id, owner_id)
+    
     stop = Stop(trip_id=trip_id, **data.model_dump())
     db.add(stop)
     await db.flush()
     await db.refresh(stop, ["activities"])
     return stop
 
-
-async def get_stop(db: AsyncSession, stop_id: int) -> Stop:
+async def _get_stop(db: AsyncSession, stop_id: int, owner_id: int) -> Stop:
     result = await db.execute(
-        select(Stop).options(selectinload(Stop.activities)).where(Stop.id == stop_id)
+        select(Stop)
+        .options(selectinload(Stop.activities))
+        .where(Stop.id == stop_id)
     )
     stop = result.scalar_one_or_none()
     if stop is None:
-        raise NotFoundError("Stop", stop_id)
+        raise HTTPException(status_code=404, detail="Stop not found")
+    
+    result_trip = await db.execute(select(Trip).where(Trip.id == stop.trip_id))
+    trip = result_trip.scalar_one()
+    if trip.owner_id != owner_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
     return stop
 
-
-async def update_stop(db: AsyncSession, stop: Stop, data: StopUpdate) -> Stop:
+async def update_stop(db: AsyncSession, stop_id: int, owner_id: int, data: StopUpdate) -> Stop:
+    stop = await _get_stop(db, stop_id, owner_id)
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(stop, field, value)
@@ -146,15 +125,21 @@ async def update_stop(db: AsyncSession, stop: Stop, data: StopUpdate) -> Stop:
     await db.refresh(stop, ["activities"])
     return stop
 
+async def delete_stop(db: AsyncSession, stop_id: int, owner_id: int) -> None:
+    stop = await _get_stop(db, stop_id, owner_id)
+    await db.delete(stop)
+    await db.flush()
 
-async def reorder_stops(db: AsyncSession, trip_id: int, data: StopReorder) -> list[Stop]:
+async def reorder_stops(db: AsyncSession, trip_id: int, owner_id: int, data: StopReorder) -> list[Stop]:
+    await get_trip(db, trip_id, owner_id)
+    
     for idx, stop_id in enumerate(data.stop_ids):
         result = await db.execute(
             select(Stop).where(Stop.id == stop_id, Stop.trip_id == trip_id)
         )
         stop = result.scalar_one_or_none()
         if stop is None:
-            raise NotFoundError("Stop", stop_id)
+            raise HTTPException(status_code=404, detail=f"Stop {stop_id} not found")
         stop.order = idx
     await db.flush()
 
@@ -167,31 +152,27 @@ async def reorder_stops(db: AsyncSession, trip_id: int, data: StopReorder) -> li
     return list(result.scalars().all())
 
 
-async def delete_stop(db: AsyncSession, stop: Stop) -> None:
-    await db.delete(stop)
-    await db.flush()
-
-
 # ── Activity CRUD ────────────────────────────────────────────────────────
 
-
-async def add_activity(db: AsyncSession, stop_id: int, data: TripActivityCreate) -> TripActivity:
+async def add_activity(db: AsyncSession, stop_id: int, owner_id: int, data: TripActivityCreate) -> TripActivity:
+    await _get_stop(db, stop_id, owner_id)
     activity = TripActivity(stop_id=stop_id, **data.model_dump())
     db.add(activity)
     await db.flush()
     await db.refresh(activity)
     return activity
 
-
-async def get_activity(db: AsyncSession, activity_id: int) -> TripActivity:
+async def _get_activity(db: AsyncSession, activity_id: int, owner_id: int) -> TripActivity:
     result = await db.execute(select(TripActivity).where(TripActivity.id == activity_id))
     activity = result.scalar_one_or_none()
     if activity is None:
-        raise NotFoundError("Activity", activity_id)
+        raise HTTPException(status_code=404, detail="Activity not found")
+        
+    await _get_stop(db, activity.stop_id, owner_id)
     return activity
 
-
-async def update_activity(db: AsyncSession, activity: TripActivity, data: TripActivityUpdate) -> TripActivity:
+async def update_activity(db: AsyncSession, activity_id: int, owner_id: int, data: TripActivityUpdate) -> TripActivity:
+    activity = await _get_activity(db, activity_id, owner_id)
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(activity, field, value)
@@ -199,24 +180,23 @@ async def update_activity(db: AsyncSession, activity: TripActivity, data: TripAc
     await db.refresh(activity)
     return activity
 
-
-async def delete_activity(db: AsyncSession, activity: TripActivity) -> None:
+async def delete_activity(db: AsyncSession, activity_id: int, owner_id: int) -> None:
+    activity = await _get_activity(db, activity_id, owner_id)
     await db.delete(activity)
     await db.flush()
 
 
 # ── Budget ───────────────────────────────────────────────────────────────
 
-
-async def get_budget_summary(db: AsyncSession, trip: Trip) -> BudgetSummary:
-    """Compute budget breakdown for a trip."""
+async def get_budget_summary(db: AsyncSession, trip_id: int, owner_id: int) -> BudgetSummary:
+    trip = await get_trip(db, trip_id, owner_id)
+    
     all_activities: list[TripActivity] = []
     for stop in trip.stops:
         all_activities.extend(stop.activities)
 
     total = sum(a.estimated_cost for a in all_activities)
 
-    # By category
     cat_totals: dict[str, float] = defaultdict(float)
     for a in all_activities:
         cat_totals[a.cost_category] += a.estimated_cost
@@ -230,17 +210,19 @@ async def get_budget_summary(db: AsyncSession, trip: Trip) -> BudgetSummary:
         for cat, amt in sorted(cat_totals.items())
     ]
 
-    # Daily costs
     daily: dict[int, float] = defaultdict(float)
     for a in all_activities:
         daily[a.day_number] += a.estimated_cost
     daily_costs = [{"day": d, "cost": round(c, 2)} for d, c in sorted(daily.items())]
 
-    # Duration
-    num_days = max((d["day"] for d in daily_costs), default=1) if daily_costs else 1
-    avg_per_day = round(total / num_days, 2) if num_days > 0 else 0.0
+    total_days = 1
+    if trip.start_date and trip.end_date:
+        total_days = (trip.end_date - trip.start_date).days + 1
+        if total_days < 1:
+            total_days = 1
 
-    remaining = round(trip.budget_limit - total, 2) if trip.budget_limit > 0 else 0.0
+    avg_per_day = round(total / total_days, 2)
+    remaining = round(trip.budget_limit - total, 2)
 
     return BudgetSummary(
         trip_id=trip.id,
@@ -248,26 +230,8 @@ async def get_budget_summary(db: AsyncSession, trip: Trip) -> BudgetSummary:
         budget_limit=trip.budget_limit,
         total_estimated=round(total, 2),
         remaining=remaining,
-        is_over_budget=total > trip.budget_limit > 0,
+        is_over_budget=total > trip.budget_limit,
         average_per_day=avg_per_day,
         breakdown=breakdown,
         daily_costs=daily_costs,
     )
-
-
-# ── Admin stats ──────────────────────────────────────────────────────────
-
-
-async def count_trips(db: AsyncSession) -> int:
-    result = await db.execute(select(func.count(Trip.id)))
-    return result.scalar_one()
-
-
-async def top_cities(db: AsyncSession, limit: int = 10) -> list[dict]:
-    result = await db.execute(
-        select(Stop.city_name, func.count(Stop.id).label("trip_count"))
-        .group_by(Stop.city_name)
-        .order_by(func.count(Stop.id).desc())
-        .limit(limit)
-    )
-    return [{"city": row.city_name, "trip_count": row.trip_count} for row in result.all()]

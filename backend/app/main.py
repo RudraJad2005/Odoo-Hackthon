@@ -1,11 +1,13 @@
 """Application entry point — FastAPI app factory with all routers and middleware."""
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import init_db
@@ -38,6 +40,8 @@ logger = logging.getLogger("traveloop")
 async def lifespan(app: FastAPI):
     """Startup / shutdown hooks."""
     logger.info("🚀 Starting Traveloop API …")
+    os.makedirs("uploads", exist_ok=True)
+    logger.info("📁 Ensured uploads directory exists.")
     await init_db()
     logger.info("✅ Database tables ensured.")
     yield
@@ -94,12 +98,15 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(users_router, prefix="/api", tags=["Auth & Users"])
-app.include_router(trips_router, prefix="/api", tags=["Trips, Stops & Activities"])
+app.include_router(trips_router)
 app.include_router(catalog_router, prefix="/api", tags=["City & Activity Catalog"])
 app.include_router(checklist_router, prefix="/api", tags=["Packing Checklist"])
 app.include_router(notes_router, prefix="/api", tags=["Trip Notes"])
 app.include_router(community_router, prefix="/api", tags=["Community"])
 app.include_router(admin_router, prefix="/api", tags=["Admin"])
+
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 # ── Root health check ───────────────────────────────────────────────────

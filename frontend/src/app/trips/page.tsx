@@ -2,55 +2,78 @@
 
 import Link from 'next/link';
 
-// Mock data matching backend TripListOut schema
-const MOCK_TRIPS = [
-  {
-    id: 1,
-    name: 'The Rome Chronicles',
-    cover_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=2670&auto=format&fit=crop',
-    start_date: '2026-10-12',
-    end_date: '2026-10-19',
-    status: 'draft',
-    is_public: false,
-    stop_count: 3,
-    total_cost: 2400.0,
-    created_at: '2026-05-01T10:00:00Z',
-  },
-  {
-    id: 2,
-    name: 'Kyoto Awakening',
-    cover_url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2670&auto=format&fit=crop',
-    start_date: '2026-04-05',
-    end_date: '2026-04-15',
-    status: 'published',
-    is_public: true,
-    stop_count: 2,
-    total_cost: 3200.0,
-    created_at: '2026-03-15T09:30:00Z',
-  },
-  {
-    id: 3,
-    name: 'Parisian Escape',
-    cover_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2073&auto=format&fit=crop',
-    start_date: '2026-12-20',
-    end_date: '2026-12-27',
-    status: 'completed',
-    is_public: false,
-    stop_count: 1,
-    total_cost: 1800.0,
-    created_at: '2025-11-10T14:20:00Z',
-  }
-];
+import { useEffect, useState } from 'react';
+import { fetchApi } from '@/lib/api';
 
-function formatDateRange(start: string, end: string) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+type TripListOut = {
+  id: number;
+  name: string;
+  cover_url: string | null;
+  start_date: string;
+  end_date: string;
+  status: string;
+  is_public: boolean;
+  stop_count: number;
+  total_cost: number;
+  created_at: string;
+};
+
+function formatDateRange(start?: string | null, end?: string | null) {
+  if (!start && !end) return 'DATES TBD';
+  if (start && !end) {
+    const startDate = new Date(start);
+    return startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+  }
+  if (!start && end) {
+    const endDate = new Date(end);
+    return `UNTIL ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}`;
+  }
+  
+  const startDate = new Date(start!);
+  const endDate = new Date(end!);
   const startStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const endStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   return `${startStr} — ${endStr}`.toUpperCase();
 }
 
 export default function TripsPage() {
+  const [trips, setTrips] = useState<TripListOut[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadTrips() {
+      try {
+        const data = await fetchApi('/trips');
+        setTrips(data);
+      } catch (err) {
+        console.error('Failed to load trips:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTrips();
+  }, []);
+
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.preventDefault();
+    if (!confirm('Are you sure you want to delete this journey? This action cannot be undone.')) return;
+    
+    try {
+      await fetchApi(`/trips/${id}`, { method: 'DELETE' });
+      setTrips(trips.filter(t => t.id !== id));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete trip');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-65px)] flex items-center justify-center">
+        <p className="sans text-xs uppercase tracking-widest text-gray-500">Loading your journeys...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-65px)] px-6 py-12 md:py-20 max-w-7xl mx-auto">
       
@@ -75,13 +98,13 @@ export default function TripsPage() {
 
       {/* Trips Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-        {MOCK_TRIPS.map((trip) => (
+        {trips.map((trip) => (
           <div key={trip.id} className="group relative flex flex-col">
             
             {/* Image Container */}
             <div className="relative aspect-[4/5] overflow-hidden mb-6 bg-black/5 dark:bg-white/5">
               <img 
-                src={trip.cover_url} 
+                src={trip.cover_url || 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=2670&auto=format&fit=crop'} 
                 alt={trip.name} 
                 className="w-full h-full object-cover filter grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
               />
@@ -115,6 +138,7 @@ export default function TripsPage() {
                   </svg>
                 </Link>
                 <button 
+                  onClick={(e) => handleDelete(e, trip.id)}
                   className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-red-600 hover:text-white hover:bg-red-600 hover:scale-110 transition-all"
                   title="Delete"
                 >
@@ -147,7 +171,7 @@ export default function TripsPage() {
         ))}
       </div>
 
-      {MOCK_TRIPS.length === 0 && (
+      {trips.length === 0 && (
         <div className="py-24 text-center border-t border-black/10">
           <p className="serif text-2xl text-gray-400 mb-6">No itineraries crafted yet.</p>
           <Link href="/trips/new" className="sans text-xs uppercase tracking-widest text-black hover:text-accent border-b border-black hover:border-accent pb-1 transition">

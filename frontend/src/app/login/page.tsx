@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { fetchApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 const destinations = [
   {
@@ -41,9 +44,25 @@ export default function LoginPage() {
 
   const dest = destinations[currentDest];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login } = useAuth();
+  const router = useRouter();
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password });
+    setError('');
+    try {
+      const data = await fetchApi('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      if (data.access_token) {
+        await login(data.access_token);
+        router.push('/trips');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    }
   };
 
   return (
@@ -109,6 +128,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {error && <p className="text-red-500 text-xs mb-4">{error}</p>}
             <button
               type="submit"
               className="w-full bg-black text-white hover:bg-accent border border-black hover:border-accent py-4 sans text-xs uppercase tracking-widest transition"

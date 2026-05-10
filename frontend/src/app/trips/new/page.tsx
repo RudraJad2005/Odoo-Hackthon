@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { fetchApi } from '@/lib/api';
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -25,12 +26,48 @@ export default function NewTripPage() {
     }
   };
 
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Creating trip:', formData, 'Cover photo:', coverPhoto);
-    // TODO: integrate with backend API
-    // For now, redirect to itineraries page
-    router.push('/trips');
+    setError('');
+    setLoading(true);
+    
+    try {
+      let cover_url = null;
+
+      // Upload the cover photo first if one is selected
+      if (coverPhoto) {
+        const formDataPayload = new FormData();
+        formDataPayload.append('file', coverPhoto);
+        
+        const uploadResponse = await fetchApi('/trips/upload/cover', {
+          method: 'POST',
+          body: formDataPayload,
+        });
+        
+        cover_url = uploadResponse.cover_url;
+      }
+
+      // Send the JSON payload to create the trip
+      await fetchApi('/trips', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: formData.name,
+          start_date: formData.start_date || null,
+          end_date: formData.end_date || null,
+          description: formData.description || null,
+          cover_url: cover_url,
+        }),
+      });
+      
+      // On success, redirect to itineraries page
+      router.push('/trips');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create trip');
+      setLoading(false);
+    }
   };
 
   return (
@@ -145,12 +182,14 @@ export default function NewTripPage() {
         </div>
 
         {/* Submit */}
-        <div className="pt-8 flex justify-end">
+        <div className="pt-8 flex flex-col items-end gap-4">
+          {error && <p className="text-red-500 text-xs">{error}</p>}
           <button
             type="submit"
-            className="bg-black text-white px-12 py-4 sans text-xs uppercase tracking-widest hover:bg-accent border border-black hover:border-accent transition"
+            disabled={loading}
+            className="bg-black text-white px-12 py-4 sans text-xs uppercase tracking-widest hover:bg-accent border border-black hover:border-accent transition disabled:opacity-50"
           >
-            Save Journey
+            {loading ? 'Saving...' : 'Save Journey'}
           </button>
         </div>
       </form>
