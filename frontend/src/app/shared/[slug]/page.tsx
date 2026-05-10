@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-
-const API_BASE = 'http://localhost:8000/api';
+import { API_BASE_URL } from '@/lib/api';
 
 type Activity = {
   name: string;
@@ -74,7 +73,7 @@ export default function SharedItineraryPage() {
     if (!slug) return;
     const load = async () => {
       try {
-        const res = await fetch(`${API_BASE}/shared/${slug}`);
+        const res = await fetch(`${API_BASE_URL}/shared/${slug}`);
         if (!res.ok) {
           if (res.status === 404) throw new Error('This itinerary does not exist or is no longer public.');
           throw new Error('Failed to load itinerary.');
@@ -109,7 +108,7 @@ export default function SharedItineraryPage() {
     }
     setCopyingTrip(true);
     try {
-      const res = await fetch(`${API_BASE}/community/trips/${trip.id}/copy`, {
+      const res = await fetch(`${API_BASE_URL}/community/trips/${trip.id}/copy`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
