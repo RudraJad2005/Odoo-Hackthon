@@ -1,33 +1,39 @@
 import Link from 'next/link';
+import ThemeToggle from '@/components/shared/ThemeToggle';
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-black bg-paper/95 backdrop-blur-sm">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 font-sans text-[10px] uppercase tracking-[0.2em] md:px-12">
+    <header className="sticky top-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-black">
+      <nav className="sans flex items-center justify-between uppercase text-[10px] tracking-[0.2em] px-4 md:px-12 py-5 w-full">
         <div className="flex items-center gap-8 md:gap-16">
-          <Link href="/" className="text-xs font-bold tracking-[0.3em] transition hover:text-accent">
+          <Link href="/" className="font-bold tracking-[0.3em] text-xs hover:text-accent transition">
             Traveloop.
           </Link>
-          <div className="hidden gap-8 text-gray-500 md:flex">
-            <Link href="/dashboard" className="border-b border-transparent pb-1 text-black transition hover:border-accent hover:text-accent">
+          <div className="hidden md:flex gap-8 text-gray-500">
+            <Link href="/dashboard" className="hover:text-accent transition border-b border-transparent hover:border-accent pb-1 text-black">
               Overview
             </Link>
-            <Link href="/trips" className="border-b border-transparent pb-1 transition hover:border-accent hover:text-accent">
+            <Link href="/trips" className="hover:text-accent transition border-b border-transparent hover:border-accent pb-1">
               Itineraries
             </Link>
-            <Link href="/search" className="border-b border-transparent pb-1 transition hover:border-accent hover:text-accent">
+            <Link href="/search" className="hover:text-accent transition border-b border-transparent hover:border-accent pb-1">
               Destinations
             </Link>
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <Link href="/trips/new" className="hidden transition hover:text-accent sm:block">
+          <ThemeToggle />
+          <Link href="/trips/new" className="hover:text-accent transition hidden sm:block">
             Create +
           </Link>
-          <div className="hidden h-3 w-px bg-gray-300 sm:block" />
+          <div className="w-px h-3 bg-gray-300 hidden sm:block"></div>
           <button className="group flex items-center gap-3">
-            <span className="hidden transition group-hover:text-accent sm:block">J. Doe</span>
-            <img src="https://i.pravatar.cc/150?u=traveloop" alt="Profile" className="h-7 w-7 rounded-full border border-black object-cover grayscale transition duration-300 group-hover:border-accent group-hover:grayscale-0" />
+            <span className="hidden sm:block group-hover:text-accent transition">J. Doe</span>
+            <img
+              src="https://i.pravatar.cc/150?u=traveloop"
+              alt="Profile"
+              className="w-7 h-7 rounded-full border border-black grayscale group-hover:grayscale-0 group-hover:border-accent object-cover transition duration-300"
+            />
           </button>
         </div>
       </nav>
