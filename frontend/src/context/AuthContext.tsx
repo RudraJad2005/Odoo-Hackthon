@@ -16,27 +16,29 @@ type User = {
 type AuthContextValue = {
   user: User | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  loading: boolean;
   login: (token: string) => Promise<void>;
   logout: () => void;
+  refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  loading: true,
   login: async () => {},
   logout: () => {},
+  refresh: async () => {},
 });
 
 export function AuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const loadUser = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!token) {
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
@@ -47,7 +49,7 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
       console.error('Failed to load user:', err);
       localStorage.removeItem('access_token');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -65,8 +67,12 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
     setUser(null);
   };
 
+  const refresh = async () => {
+    await loadUser();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );
@@ -74,4 +80,8 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
 
 export function useAuthContext() {
   return useContext(AuthContext);
+}
+
+export function useAuth() {
+  return useAuthContext();
 }
