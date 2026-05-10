@@ -5,9 +5,42 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.apps.community.models import TripCopy
-from app.apps.community.schemas import SharedTripOut
+from app.apps.community.schemas import SharedTripOut, SharedTripDetailOut
 from app.apps.trips.models import Stop, Trip, TripActivity
 from app.core.exceptions import BadRequestError, NotFoundError
+
+
+async def get_trip_by_slug(db: AsyncSession, slug: str) -> SharedTripDetailOut:
+    """Fetch a public trip by its public_slug for the shared view."""
+    result = await db.execute(
+        select(Trip)
+        .options(
+            selectinload(Trip.owner),
+            selectinload(Trip.stops).selectinload(Stop.activities),
+        )
+        .where(Trip.public_slug == slug, Trip.is_public == True)  # noqa: E712
+    )
+    trip = result.scalar_one_or_none()
+    if trip is None:
+        raise NotFoundError("Shared trip", slug)
+
+    total_cost = sum(a.estimated_cost for s in trip.stops for a in s.activities)
+
+    return SharedTripDetailOut(
+        id=trip.id,
+        name=trip.name,
+        description=trip.description,
+        cover_url=trip.cover_url,
+        owner_name=trip.owner.full_name if trip.owner else "Unknown",
+        start_date=trip.start_date,
+        end_date=trip.end_date,
+        budget_limit=trip.budget_limit,
+        total_cost=round(total_cost, 2),
+        stop_count=len(trip.stops),
+        public_slug=trip.public_slug,
+        stops=trip.stops,
+        created_at=trip.created_at,
+    )
 
 
 async def get_public_trips(
