@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function NewTripPage() {
+export default function EditTripPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    start_date: '',
-    end_date: '',
-    description: '',
+    name: 'The Rome Chronicles',
+    start_date: '2026-10-12',
+    end_date: '2026-10-19',
+    description: 'A week exploring the ancient ruins, eating amazing pasta, and visiting the Vatican.',
   });
   const [coverPhoto, setCoverPhoto] = useState<File | null>(null);
+
+  // In a real app, you would fetch the trip data using params.id here
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -27,9 +29,9 @@ export default function NewTripPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Creating trip:', formData, 'Cover photo:', coverPhoto);
+    console.log(`Updating trip ${params.id}:`, formData, 'Cover photo:', coverPhoto);
     // TODO: integrate with backend API
-    // For now, redirect to itineraries page
+    // For now, redirect to trips page
     router.push('/trips');
   };
 
@@ -41,9 +43,9 @@ export default function NewTripPage() {
           <span>&larr;</span> Back to Itineraries
         </Link>
         <div className="w-8 h-px bg-accent mb-6"></div>
-        <p className="sans text-[10px] uppercase tracking-[0.3em] text-gray-400 mb-4">Start Planning</p>
+        <p className="sans text-[10px] uppercase tracking-[0.3em] text-gray-400 mb-4">Edit Details</p>
         <h1 className="serif text-5xl md:text-6xl leading-[0.95]">
-          A New<br />
+          Update<br />
           <i className="text-gray-400">Journey.</i>
         </h1>
       </div>
@@ -137,7 +139,7 @@ export default function NewTripPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="sans text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-accent transition">
-                  Click or drag to upload
+                  Click or drag to update photo
                 </p>
               </>
             )}
@@ -150,7 +152,7 @@ export default function NewTripPage() {
             type="submit"
             className="bg-black text-white px-12 py-4 sans text-xs uppercase tracking-widest hover:bg-accent border border-black hover:border-accent transition"
           >
-            Save Journey
+            Save Changes
           </button>
         </div>
       </form>
