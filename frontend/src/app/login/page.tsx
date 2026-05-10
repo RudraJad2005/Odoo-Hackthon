@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, saveTokens } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 const destinations = [
   {
@@ -28,6 +29,7 @@ const destinations = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +55,7 @@ export default function LoginPage() {
     try {
       const tokens = await login(email, password);
       saveTokens(tokens.access_token, tokens.refresh_token);
+      await refresh();
       router.push('/dashboard');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');

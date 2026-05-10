@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Plus, Map, PackageCheck, NotebookPen, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const recentTrips = [
   {
@@ -74,12 +75,21 @@ const today = new Date().toLocaleDateString('en-US', {
 });
 
 export default function DashboardPage() {
+  const { user, loading } = useAuth();
+  const displayName = user ? user.full_name.split(' ')[0] : 'Traveler';
+
   return (
     <main className="w-full px-4 md:px-12 py-12 bg-[var(--background)] text-[var(--foreground)]">
       <div className="mx-auto w-full max-w-7xl">
         {/* Welcome Banner */}
         <div className="mb-12 pb-6 border-b border-[var(--border)]">
-          <h1 className="font-serif text-4xl md:text-5xl mb-2">Welcome back, J. Doe</h1>
+          <h1 className="font-serif text-4xl md:text-5xl mb-2">
+            {loading ? (
+              <span className="inline-block w-64 h-12 bg-gray-200 animate-pulse"></span>
+            ) : (
+              <>Welcome back, {displayName}</>
+            )}
+          </h1>
           <p className="font-sans text-xs uppercase tracking-widest text-[var(--muted)]">
             {today}
           </p>

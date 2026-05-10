@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { register, saveTokens } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 const destinations = [
   {
@@ -28,6 +29,7 @@ const destinations = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,6 +67,7 @@ export default function RegisterPage() {
     try {
       const tokens = await register(fullName, email, password);
       saveTokens(tokens.access_token, tokens.refresh_token);
+      await refresh();
       router.push('/dashboard');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
