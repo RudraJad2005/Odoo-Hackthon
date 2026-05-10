@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editorial - Traveloop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#8C2727', // A deep, elegant Bordeaux Red
+                        paper: '#faf9f6',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #faf9f6; color: #1a1a1a; }
+        .serif { font-family: 'Cormorant Garamond', serif; }
+        .sans { font-family: 'Montserrat', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+    <!-- Navbar / Header Base -->
+    <header class="sticky top-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-black">
+        <nav class="sans flex items-center justify-between uppercase text-[10px] tracking-[0.2em] px-4 md:px-12 py-5 w-full">
+            <div class="flex items-center gap-8 md:gap-16">
+                <a href="index.html" class="font-bold tracking-[0.3em] text-xs hover:text-accent transition">Traveloop.</a>
+                <div class="hidden md:flex gap-8 text-gray-500">
+                    <a href="#" class="hover:text-accent transition border-b border-transparent hover:border-accent pb-1 text-black">Overview</a>
+                    <a href="#" class="hover:text-accent transition border-b border-transparent hover:border-accent pb-1">Itineraries</a>
+                    <a href="#" class="hover:text-accent transition border-b border-transparent hover:border-accent pb-1">Destinations</a>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="#" class="hover:text-accent transition hidden sm:block">Create +</a>
+                <div class="w-px h-3 bg-gray-300 hidden sm:block"></div>
+                <button class="group flex items-center gap-3">
+                    <span class="hidden sm:block group-hover:text-accent transition">J. Doe</span>
+                    <img src="https://i.pravatar.cc/150?u=traveloop" alt="Profile" class="w-7 h-7 rounded-full border border-black grayscale group-hover:grayscale-0 group-hover:border-accent object-cover transition duration-300">
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow w-full px-4 md:px-12 py-12">
+        
+        <!-- Header for the section -->
+        <div class="flex justify-between items-end border-b border-black pb-6 mb-12">
+            <h2 class="serif text-4xl md:text-5xl">Active Journey</h2>
+            <p class="sans text-xs uppercase tracking-widest text-gray-400">Vol. 01</p>
+        </div>
+
+        <!-- Featured View -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-24">
+            
+            <!-- Left Text Content -->
+            <div class="lg:col-span-5 flex flex-col justify-center">
+                <p class="sans text-xs uppercase tracking-widest text-gray-500 mb-6">Current Draft</p>
+                <h1 class="serif text-7xl md:text-8xl leading-none mb-6">The <span id="typer-city" class="text-black">Kyoto</span><span class="animate-pulse text-accent">|</span><br><i class="text-gray-400">Chronicles.</i></h1>
+                <p class="sans text-sm leading-relaxed text-gray-600 mb-8 max-w-sm">
+                    A seven day exploration through the ancient capital. From the bamboo groves of Arashiyama to the quiet contemplation of temple gardens. 
+                </p>
+                
+                <div class="grid grid-cols-2 gap-8 border-t border-black pt-6 sans text-xs uppercase tracking-widest">
+                    <div><span class="block text-gray-400 mb-1">Dates</span>12—19 Oct</div>
+                    <div><span class="block text-gray-400 mb-1">Pace</span>Leisurely</div>
+                    <div><span class="block text-gray-400 mb-1">Budget</span>$2,400 <span class="lowercase normal-case">est.</span></div>
+                    <div>
+                        <button class="bg-black text-white hover:bg-accent border border-black hover:border-accent px-4 py-3 transition w-full">Edit Trip</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Large Image -->
+            <div class="lg:col-span-7 relative group">
+                <img id="hero-img" src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2670&auto=format&fit=crop" alt="Kyoto" class="w-full aspect-[3/4] md:aspect-auto md:h-[600px] object-cover filter grayscale hover:grayscale-0 transition duration-1000">
+                <div class="absolute -left-8 md:-left-16 bottom-12 bg-white p-6 shadow-2xl sans hidden md:block max-w-xs transition-transform transform group-hover:translate-x-4">
+                    <p class="uppercase text-xs tracking-widest border-b border-gray-200 pb-2 mb-4">Daily Agenda</p>
+                    <ul class="space-y-3 text-sm text-gray-600">
+                        <li class="flex justify-between"><span>01. Arrival & Check-in</span> <span class="text-gray-400">—</span></li>
+                        <li class="flex justify-between"><span>02. The Golden Pavilion</span> <span class="text-gray-400">Act</span></li>
+                        <li class="flex justify-between text-gray-400"><span>03. Free Afternoon</span> <span>—</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Section: Recent Drafts -->
+        <div class="pt-12 pb-24">
+            <div class="flex justify-between items-center mb-12">
+                <h3 class="serif text-3xl">Upcoming & Past</h3>
+                <a href="#" class="sans text-xs uppercase tracking-widest hover:italic hover:text-accent transition">View All</a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="group cursor-pointer">
+                    <div class="w-full h-64 bg-gray-200 mb-4 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop" class="w-full h-full object-cover filter grayscale opacity-80 group-hover:scale-105 group-hover:opacity-100 transition duration-700">
+                    </div>
+                    <p class="sans text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-accent transition mb-2">Nov 22 — Paris, FR</p>
+                    <h4 class="serif text-2xl group-hover:italic group-hover:text-accent transition">Parisian Winter</h4>
+                </div>
+                <!-- Card 2 -->
+                <div class="group cursor-pointer">
+                    <div class="w-full h-64 bg-gray-200 mb-4 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1513635269975-59693e0cd100?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover filter grayscale opacity-80 group-hover:scale-105 group-hover:opacity-100 transition duration-700">
+                    </div>
+                    <p class="sans text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-accent transition mb-2">Dec 05 — Reykjavík, IS</p>
+                    <h4 class="serif text-2xl group-hover:italic group-hover:text-accent transition">Nordic Serenity</h4>
+                </div>
+                <!-- Card 3 -->
+                <div class="group cursor-pointer">
+                    <div class="w-full h-64 bg-gray-200 mb-4 overflow-hidden flex items-center justify-center border border-dashed border-gray-400 group-hover:border-accent group-hover:bg-accent/5 transition">
+                        <span class="serif text-4xl text-gray-400 group-hover:text-accent transition">+</span>
+                    </div>
+                    <p class="sans text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-accent transition mb-2">Blank Canvas</p>
+                    <h4 class="serif text-2xl group-hover:italic group-hover:text-accent transition">Start New Draft</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="pt-12 pb-24 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="col-span-2 md:col-span-1 flex flex-col justify-between">
+                <h3 class="serif text-3xl">Your<br>Footprint.</h3>
+                <p class="sans text-[10px] uppercase tracking-widest text-gray-500 mt-4">Since 2024</p>
+            </div>
+            <div class="md:border-l border-gray-300 md:pl-6 flex flex-col justify-center">
+                <span class="serif text-6xl md:text-7xl">12</span>
+                <span class="sans text-[10px] uppercase tracking-widest text-gray-500 mt-2">Countries</span>
+            </div>
+            <div class="border-l border-gray-300 pl-6 flex flex-col justify-center">
+                <span class="serif text-6xl md:text-7xl">48</span>
+                <span class="sans text-[10px] uppercase tracking-widest text-gray-500 mt-2">Cities</span>
+            </div>
+            <div class="border-l border-gray-300 pl-6 flex flex-col justify-center">
+                <span class="serif text-6xl md:text-7xl">14k</span>
+                <span class="sans text-[10px] uppercase tracking-widest text-gray-500 mt-2">Miles Traveled</span>
+            </div>
+        </div>
+
+        <!-- Inspiration Section -->
+        <div class="pt-12 pb-24">
+            <div class="flex justify-between items-center mb-12">
+                <h3 class="serif text-3xl">Curated Experiences</h3>
+                <a href="#" class="sans text-[10px] uppercase tracking-widest text-gray-500 hover:italic hover:text-accent transition">Explore All</a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                
+                <div class="group relative overflow-hidden h-[400px] md:h-[600px] bg-gray-200 cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1543783207-ec64e4d95325?q=80&w=2000&auto=format&fit=crop" class="w-full h-full object-cover filter grayscale opacity-90 group-hover:scale-105 group-hover:grayscale-0 group-hover:opacity-100 transition duration-1000">
+                    <div class="absolute bottom-8 left-8 text-white z-10 drop-shadow-md">
+                        <p class="sans text-[10px] uppercase tracking-[0.2em] mb-2 drop-shadow-lg group-hover:text-accent/80 transition">Featured</p>
+                        <h4 class="serif text-5xl md:text-6xl leading-none drop-shadow-2xl group-hover:text-white transition duration-700">The<br>Architecture<br>Tour.</h4>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-10 md:pl-8">
+                    <p class="sans text-sm leading-relaxed text-gray-600 border-l border-black pl-6">
+                        Immerse yourself in our hand-picked selections. Discover hidden gems, architectural wonders, and culinary masterpieces across the globe. Each collection is thoughtfully curated to provide an unforgettable narrative.
+                    </p>
+                    
+                    <div class="group cursor-pointer flex gap-6 items-center hover:opacity-75 transition">
+                        <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop" class="w-24 h-24 object-cover filter grayscale group-hover:grayscale-0 transition duration-700">
+                        <div>
+                            <h5 class="serif text-2xl group-hover:italic group-hover:text-accent transition">New York Noir</h5>
+                            <p class="sans text-[10px] uppercase tracking-widest text-gray-500 mt-1">4 Days / Urban</p>
+                        </div>
+                    </div>
+                    
+                    <div class="group cursor-pointer flex gap-6 items-center hover:opacity-75 transition">
+                        <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?q=80&w=800&auto=format&fit=crop" class="w-24 h-24 object-cover filter grayscale group-hover:grayscale-0 transition duration-700">
+                        <div>
+                            <h5 class="serif text-2xl group-hover:italic group-hover:text-accent transition">Venetian Canals</h5>
+                            <p class="sans text-[10px] uppercase tracking-widest text-gray-500 mt-1">3 Days / Romance</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-black bg-black text-white px-4 md:px-12 py-16">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div class="md:col-span-2">
+                <h2 class="serif text-5xl md:text-7xl mb-6">Traveloop.</h2>
+                <p class="sans text-xs uppercase tracking-widest text-gray-400 max-w-xs leading-relaxed">
+                    Elevating the art of travel planning. Curate, organize, and execute your itineraries with editorial precision.
+                </p>
+            </div>
+            <div class="sans text-xs uppercase tracking-widest leading-loose flex flex-col gap-2">
+                <span class="text-gray-500 mb-2">Platform</span>
+                <a href="#" class="hover:text-gray-300">Dashboard</a>
+                <a href="#" class="hover:text-gray-300">Itineraries</a>
+                <a href="#" class="hover:text-gray-300">Destinations</a>
+                <a href="#" class="hover:text-gray-300">Expenses</a>
+            </div>
+            <div class="sans text-xs uppercase tracking-widest leading-loose flex flex-col gap-2">
+                <span class="text-gray-500 mb-2">Account</span>
+                <a href="#" class="hover:text-gray-300">Profile</a>
+                <a href="#" class="hover:text-gray-300">Settings</a>
+                <a href="#" class="hover:text-gray-300">Sign Out</a>
+            </div>
+        </div>
+        
+        <div class="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center sans text-[10px] uppercase tracking-widest text-gray-500">
+            <p>&copy; 2026 Traveloop. Odoo Hackathon.</p>
+            <div class="flex gap-6 mt-4 md:mt-0">
+                <a href="#" class="hover:text-white">Privacy</a>
+                <a href="#" class="hover:text-white">Terms</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const destinations = [
+            { name: "Kyoto", image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2670&auto=format&fit=crop" },
+            { name: "Paris", image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop" },
+            { name: "Tokyo", image: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?q=80&w=2670&auto=format&fit=crop" },
+            { name: "Rome",  image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=2670&auto=format&fit=crop" },
+            { name: "Cairo", image: "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?q=80&w=2670&auto=format&fit=crop" }
+        ];
+
+        let destIndex = 0;
+        let isDeleting = true; // Start by deleting the initially hardcoded city
+        let txtIndex = destinations[destIndex].name.length;
+        const typerElement = document.getElementById('typer-city');
+        const heroImg = document.getElementById('hero-img');
+
+        function typeWriter() {
+            const currentDest = destinations[destIndex];
+            
+            if (isDeleting) {
+                // Remove char
+                typerElement.innerText = currentDest.name.substring(0, txtIndex - 1);
+                txtIndex--;
+            } else {
+                // Add char
+                typerElement.innerText = currentDest.name.substring(0, txtIndex + 1);
+                txtIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 100 : 150;
+
+            // If word is complete
+            if (!isDeleting && txtIndex === currentDest.name.length) {
+                // Pause at end
+                typeSpeed = 2500;
+                isDeleting = true;
+            } else if (isDeleting && txtIndex === 0) {
+                // Move to next word
+                isDeleting = false;
+                destIndex = (destIndex + 1) % destinations.length;
+                
+                // Swap image when fully deleted
+                heroImg.style.opacity = 0; 
+                setTimeout(() => {
+                    heroImg.src = destinations[destIndex].image;
+                    
+                    // Wait for new image to load before fading it back in
+                    heroImg.onload = () => {
+                        heroImg.style.opacity = 1;
+                    };
+                }, 1000); // Wait 1 second (matching the duration-1000 class) for the fade out to finish
+                
+                typeSpeed = 1200; // Pause a bit longer before typing next word to let the image fade happen
+            }
+
+            setTimeout(typeWriter, typeSpeed);
+        }
+
+        // Use Tailwind's transition duration (1000ms), we just need to ensure opacity is explicitly set initially
+        heroImg.style.opacity = 1;
+
+        // Start typing after initial delay
+        setTimeout(typeWriter, 2500);
+    </script>
+</body>
+</html>
