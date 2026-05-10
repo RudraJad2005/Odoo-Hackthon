@@ -41,7 +41,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-[calc(100vh-65px)] max-w-7xl mx-auto px-6 py-12 md:py-20">
-      
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 border-b border-black/10 dark:border-white/10 pb-12">
         <div>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
 
       {/* Main Content Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-        
+
         {/* Left Column: Recent Itineraries */}
         <div className="lg:col-span-2">
           <div className="flex justify-between items-end mb-8">
@@ -94,15 +94,15 @@ export default function DashboardPage() {
               View All
             </Link>
           </div>
-          
+
           <div className="space-y-6">
             {recentTrips.map((trip) => (
               <Link key={trip.id} href={`/trips/${trip.id}`} className="block group">
                 <div className="flex items-center gap-6 p-4 border border-black/10 dark:border-white/10 hover:border-black dark:hover:border-white transition">
                   <div className="w-24 h-24 sm:w-32 sm:h-24 flex-shrink-0 overflow-hidden relative">
-                    <img 
-                      src={trip.image} 
-                      alt={trip.name} 
+                    <img
+                      src={trip.image}
+                      alt={trip.name}
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500"
                     />
                     {trip.status === 'ongoing' && (

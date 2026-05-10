@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [language, setLanguage] = useState('English');

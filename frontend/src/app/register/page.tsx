@@ -86,9 +86,8 @@ export default function RegisterPage() {
           src={dest.image}
           alt={dest.city}
           onLoad={() => setImgLoaded(true)}
-          className={`absolute inset-0 w-full h-full object-cover filter grayscale-[40%] transition-all duration-[2000ms] ${
-            imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
-          }`}
+          className={`absolute inset-0 w-full h-full object-cover filter grayscale-[40%] transition-all duration-[2000ms] ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
+            }`}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-black/70"></div>
         <div className="absolute top-8 left-12">
@@ -125,11 +124,10 @@ export default function RegisterPage() {
               <button
                 key={i}
                 onClick={() => { setImgLoaded(false); setCurrentDest(i); }}
-                className={`sans text-[10px] uppercase tracking-widest transition-all duration-500 ${
-                  i === currentDest
+                className={`sans text-[10px] uppercase tracking-widest transition-all duration-500 ${i === currentDest
                     ? 'text-white border-b border-white pb-1'
                     : 'text-white/30 hover:text-white/60'
-                }`}
+                  }`}
               >
                 {d.city}
               </button>
